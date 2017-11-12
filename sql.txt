@@ -1,0 +1,77 @@
+
+
+DROP TABLE forum;
+DROP TABLE users;
+DROP TABLE post;
+DROP TABLE vote;
+DROP TABLE thread;
+
+CREATE TABLE forum (
+  title TEXT NOT NULL,
+  "user" TEXT NOT NULL,
+  slug CITEXT UNIQUE,
+  posts INTEGER,
+  threads INTEGER
+);
+
+CREATE TABLE thread (
+  id SERIAL PRIMARY KEY,
+  votes INTEGER,
+  slug CITEXT UNIQUE ,
+  forum TEXT NOT NULL ,
+  author TEXT,
+  title TEXT,
+  message TEXT,
+  created TIMESTAMP
+);
+
+CREATE TABLE users (
+  fullname text,
+  nickname  CITEXT COLLATE ucs_basic NOT NULL UNIQUE,
+  email CITEXT NOT NULL UNIQUE,
+  about text
+);
+
+CREATE TABLE post (
+  id SERIAL PRIMARY KEY ,
+  parent INTEGER DEFAULT 0,
+  author TEXT,
+  message TEXT,
+  isedited BOOLEAN,
+  forum TEXT,
+  created TIMESTAMP DEFAULT now(),
+  thread INTEGER ,
+  path TEXT
+);
+
+CREATE TABLE vote (
+  nickname TEXT,
+  threadID INTEGER,
+  voice int,
+  forum CITEXT
+);
+
+create EXTENSION citext
+
+SELECT * FROM users WHERE nickname = ANY (
+  (SELECT DISTINCT author FROM post WHERE LOWER(forum) = LOWER(?::CITEXT))
+  UNION
+  (SELECT DISTINCT nickname FROM vote WHERE LOWER(forum) = LOWER(?::CITEXT))
+) ) ORDER BY nickname LIMIT ?
+
+
+
+
+
+SELECT DISTINCT user FROM forum WHERE LOWER(slug) = LOWER(?::CITEXT)
+SELECT * FROM users WHERE nickname = ANY ( (SELECT DISTINCT author FROM post WHERE LOWER(forum) =
+                                                                                   LOWER(?)) UNION (SELECT DISTINCT author FROM thread WHERE LOWER(forum) =
+                                                                                                  LOWER(?)) ) ORDER BY nickname LIMIT ?;
+
+
+
+SELECT * from vote;
+
+[8f2YUgHLXEHSS, 8f2YUgHLXEHSS, 100]
+
+select author from post

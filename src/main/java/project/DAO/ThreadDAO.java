@@ -382,7 +382,7 @@ public class ThreadDAO {
         }
     }
 
-    @Transactional(isolation = Isolation.REPEATABLE_READ)
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public Response<Vote> vote (String nickname,int threadID, int voice, String forum) {
 
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
@@ -409,7 +409,7 @@ public class ThreadDAO {
 
     }
 
-    @Transactional(isolation = Isolation.REPEATABLE_READ)
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public Response<Thread> updateThreadVoice (Thread thread, int voice, boolean revotes) {
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
         if (revotes) {
@@ -439,7 +439,7 @@ public class ThreadDAO {
 
     }
 
-    @Transactional(isolation = Isolation.REPEATABLE_READ)
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public Response<Thread> updateThread (Thread thread, int id) {
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
         try {
@@ -465,7 +465,7 @@ public class ThreadDAO {
 
     }
 
-    @Transactional(isolation = Isolation.REPEATABLE_READ)
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public Response<Vote> reVote (String nickname,int threadID, int voice) {
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
 
@@ -508,7 +508,7 @@ public class ThreadDAO {
         }
     }
 
-    @Transactional(isolation = Isolation.REPEATABLE_READ)
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public Response<List<Post>> createPosts(List<Post> posts, int old) {
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
         try {

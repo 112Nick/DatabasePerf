@@ -33,7 +33,7 @@ public class Post {
             @JsonProperty("id") int id,
             @JsonProperty("parent") int parent,
             @JsonProperty("thread") int thread,
-            @JsonProperty("getIsEdited") boolean isEdited,
+            @JsonProperty("isEdited") boolean isEdited,
             @JsonProperty("author") String author,
             @JsonProperty("message") String message,
             @JsonProperty("forum") String forum,

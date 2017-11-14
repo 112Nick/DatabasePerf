@@ -156,7 +156,7 @@ public class ThreadDAO {
                             result.setResponse(posts, HttpStatus.OK);
                             return result;
                         } catch (DataAccessException e) {
-                        System.out.println("1");
+                        //System.out.println("1");
 
                         result.setResponse(posts, HttpStatus.NOT_FOUND);
                             return result;
@@ -173,7 +173,7 @@ public class ThreadDAO {
             return result;
         } catch (DataAccessException e) {
             result.setResponse(posts, HttpStatus.NOT_FOUND);
-            System.out.println("2");
+            //System.out.println("2");
             return result;
         }
     }
@@ -204,8 +204,8 @@ public class ThreadDAO {
             tempObj.add(limit);
 
         }
-        System.out.println(postQuery.toString());
-        System.out.println(tempObj);
+        //System.out.println(postQuery.toString());
+        //System.out.println(tempObj);
         final List<Post> res = template.query(
                 postQuery.toString(),
                 tempObj.toArray(), postMapper); //TODO
@@ -213,9 +213,9 @@ public class ThreadDAO {
         Response<List<Post>> result = new Response<>();
         if (res.isEmpty()) {
             result.setResponse(res, HttpStatus.OK);
-            System.out.println(postQuery.toString());
-            System.out.println(tempObj);
-            System.out.println("3");
+            //System.out.println(postQuery.toString());
+            //System.out.println(tempObj);
+            //System.out.println("3");
 
             return result;
         }
@@ -224,21 +224,26 @@ public class ThreadDAO {
     }
 
     //@Transactional(isolation = Isolation.REPEATABLE_READ)
-    private void threadsInc(String slug, int old) {
+//    private void threadsInc(String slug, int old) {
+    private void threadsInc(String slug) {
+
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
         try {
-            old++;
-            final int thrds = old;
+            //old++;
+            //final int thrds = old;
             template.update(con -> {
                 PreparedStatement statement = con.prepareStatement(
-                        "UPDATE forum SET threads = ? WHERE slug = ?",
+                        "UPDATE forum SET threads = threads + 1 WHERE LOWER (slug) = lower(?)",
                         PreparedStatement.RETURN_GENERATED_KEYS);
-                statement.setInt(1, thrds);
-                statement.setString(2, slug);
+                //statement.setInt(1, thrds);
+                statement.setString(1, slug);
                 return statement;
             }, keyHolder);
         } catch (DuplicateKeyException e) {
+            System.out.println("asdg");
 
+        } catch (DataAccessException e ) {
+            System.out.println("123");
         }
     }
     @Transactional(isolation = Isolation.READ_COMMITTED)
@@ -261,7 +266,9 @@ public class ThreadDAO {
                 statement.setString(7, body.getCreated());
                 return statement;
             }, keyHolder);
-            threadsInc(body.getForum(),old);
+//            threadsInc(body.getForum(),old);
+            threadsInc(body.getForum());
+
             body.setId(keyHolder.getKey().intValue()); // set Id
             result.setResponse(body, HttpStatus.CREATED);
             return result;
@@ -272,6 +279,7 @@ public class ThreadDAO {
 
         } catch (DataAccessException e) {
             result.setResponse(new Thread(), HttpStatus.NOT_FOUND);
+            System.out.println("here");
             return result;
         }
     }
@@ -490,22 +498,28 @@ public class ThreadDAO {
 
     }
 
-    public void postsInc(String slug,int inc, int old) {
+//    public void postsInc(String slug, int inc, int old) {
+    public void postsInc(String slug, int inc) {
+
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
         try {
-            old+=inc;
-            final int psts = old;
+            //old+=inc;
+            //final int psts = old;
             template.update(con -> {
                 PreparedStatement statement = con.prepareStatement(
-                        "UPDATE forum SET posts = ? WHERE slug = ?",
+                        "UPDATE forum SET posts = posts + ? WHERE LOWER(slug) = lower(?)",
                         PreparedStatement.RETURN_GENERATED_KEYS);
-                statement.setInt(1, psts);
+                statement.setInt(1, inc);
                 statement.setString(2, slug);
                 return statement;
             }, keyHolder);
         } catch (DuplicateKeyException e) {
+            System.out.println("dsfhvbahdbv");
+        } catch (DataAccessException e) {
+            System.out.println("bnmko");
 
         }
+
     }
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
@@ -562,7 +576,12 @@ public class ThreadDAO {
                     return statement;
                 }, keyHolder);
             }
-            postsInc(posts.get(0).getForum(),posts.size(), old);
+            //System.out.println(old);
+            //System.out.println(posts.size());
+
+//            postsInc(posts.get(0).getForum(),posts.size(), old);
+            postsInc(posts.get(0).getForum(),posts.size());
+
             Response<List<Post>> res = new Response<>();
             res.setResponse(posts, HttpStatus.CREATED);
             return res;

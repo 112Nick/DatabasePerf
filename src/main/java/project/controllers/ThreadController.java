@@ -53,6 +53,7 @@ public class ThreadController {
         }
 
         Response<List<Post>> res = threadDAO.createPosts(posts, forumDAO.getForum(exists.getBody().getForum()).getBody().getPosts());
+        //System.out.println(forumDAO.getForum(exists.getBody().getForum()).getBody().getSlug());
         if (res.getStatus() == HttpStatus.CONFLICT) {
             ErrMsg msg = new ErrMsg();
             return ResponseEntity.status(HttpStatus.CONFLICT).body(msg);

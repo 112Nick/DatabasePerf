@@ -57,8 +57,8 @@ public class Thread {
             //            this.created =Long.toString( created.toLocalDateTime().toEpochSecond(ZoneOffset.ofHours(3)));
 
             this.created = created.toInstant().toString();
-            System.out.println(created);
-            System.out.println(this.created);
+//            System.out.println(created);
+//            System.out.println(this.created);
 
         } else {
             this.created = null;

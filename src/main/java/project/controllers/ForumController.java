@@ -51,12 +51,14 @@ public class ForumController {
         Response<Forum> res1 = forumDAO.getForum(slug);
         if (res1.getStatus() == HttpStatus.NOT_FOUND) {
             ErrMsg msg = new ErrMsg();
-
+            msg.setMessage("1");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(msg);
         }
         Response<User> res2 = userDAO.getUserByNick(body.getAuthor());
         if (res2.getStatus() == HttpStatus.NOT_FOUND) {
             ErrMsg msg = new ErrMsg();
+            msg.setMessage("2");
+
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(msg);
         }
         body.setAuthor(res2.getBody().getNickname());
@@ -66,7 +68,9 @@ public class ForumController {
             return ResponseEntity.status(res.getStatus()).body(threadDAO.getThread(body.getSlug()).getBody());
         }
         else if (res.getStatus() == HttpStatus.NOT_FOUND) {
+
             ErrMsg msg = new ErrMsg();
+            msg.setMessage("3");
 
             return ResponseEntity.status(res.getStatus()).body(msg);
         }

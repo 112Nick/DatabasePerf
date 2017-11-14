@@ -11,4 +11,8 @@ public class ErrMsg {
     public String getMessage() {
         return message;
     }
+
+    public void setMessage(String msg) {
+         this.message = msg;
+    }
 }

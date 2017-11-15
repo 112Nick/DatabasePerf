@@ -58,4 +58,19 @@ CREATE TABLE IF NOT EXISTS vote (
 
 
 
+CREATE INDEX index_post_thread ON post (thread ASC);
+CREATE INDEX index_post_parent ON post (parent ASC);
+CREATE INDEX index_post_path ON post (path ASC);
 
+CREATE INDEX index_vote_id ON vote (id);
+CREATE INDEX index_vote_id_nicnkname ON vote (id, nickname);
+CREATE INDEX index_vote_threadID_nicname ON vote (threadID, nickname);
+
+
+CREATE INDEX index_thread_slug ON thread (LOWER(slug));
+CREATE INDEX index_thread_forum ON thread (LOWER(forum));
+CREATE INDEX index_thread_forum_created ON thread (LOWER(forum), created);
+
+
+CREATE INDEX index_user_nickname ON users (LOWER(nickname));
+CREATE INDEX index_user_email ON users (LOWER(email));

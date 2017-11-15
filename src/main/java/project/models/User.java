@@ -5,12 +5,14 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class User {
+    private Integer id;
     private  String fullname;
     private  String nickname;
     private  String email;
     private  String about;
 
     public User() {
+        this.id = -1;
         this.fullname = "";
         this.nickname = "";
         this.email = "";
@@ -46,6 +48,13 @@ public class User {
         return about;
     }
 
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public Integer getId() {
+        return id;
+    }
 
     public void setFullname(String fullname) {
         this.fullname = fullname;

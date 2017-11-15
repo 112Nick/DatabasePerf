@@ -59,8 +59,3 @@ CREATE TABLE IF NOT EXISTS vote (
 
 
 
-
-
-CREATE UNIQUE INDEX IF NOT EXISTS v_user_id_thread_id_uindex
-  ON vote (nickname, threadID);
-

@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Vote {
     private String nickname;
-    private int userID;
     private  int voice;
 
     public Vote() {
@@ -16,22 +15,15 @@ public class Vote {
     @JsonCreator
     public Vote(
             @JsonProperty("nickname") String nickname,
-            @JsonProperty("userID") int uid,
             @JsonProperty("voice") int voice
 
     ) {
         this.nickname = nickname;
         this.voice = voice;
-        this.userID = uid;
-
 
     }
     public int getVoice() {
         return voice;
-    }
-
-    public int getUserID() {
-        return userID;
     }
 
     public String getNickname() {

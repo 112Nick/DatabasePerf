@@ -6,6 +6,7 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,7 +14,10 @@ import project.models.Post;
 import project.utils.Response;
 
 import java.sql.Array;
+import java.sql.PreparedStatement;
 import java.sql.Timestamp;
+import java.util.Arrays;
+import java.util.List;
 
 @Service
 @Transactional
@@ -49,9 +53,19 @@ public class PostDAO {
 
     @Transactional(isolation = Isolation.REPEATABLE_READ)
     public Response<Post> updatePost(Post body, int id) {
+        GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
         try {
-            String sql = "UPDATE post SET message = COALESCE (?, message), isedited = COALESCE(true, isedited) WHERE id = ?";
-            template.update(sql, body.getMessage(), id);
+            template.update(con -> {
+                PreparedStatement statement = con.prepareStatement(
+                        "UPDATE post SET message = COALESCE (?, message)," +
+                                " isedited = COALESCE(true, isedited) " +
+                                "WHERE id = ?",
+                        PreparedStatement.RETURN_GENERATED_KEYS);
+                statement.setString(1 , body.getMessage());
+                statement.setInt(2, id);
+                return statement;
+            }, keyHolder);
+
             Response<Post> res = new Response<>();
             res.setResponse(body, HttpStatus.OK);
             return res;

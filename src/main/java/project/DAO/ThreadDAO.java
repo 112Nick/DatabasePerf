@@ -1,10 +1,8 @@
 package project.DAO;
 
 import org.springframework.dao.DataAccessException;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
-import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -16,11 +14,12 @@ import project.models.Thread;
 import project.models.Vote;
 import project.utils.Response;
 
-import java.sql.*;
+import java.sql.Array;
+import java.sql.PreparedStatement;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.ListIterator;
 
 @Service
 @Transactional
@@ -38,12 +37,12 @@ public class ThreadDAO {
                 new Object[]{}, Integer.class);
     }
 
-    public Response<Vote> getVote (String nickname,int uid, int threadID) {
+    public Response<Vote> getVote (String nickname, int threadID) {
         Response<Vote> result = new Response<>();
         try {
             final Vote vt =  template.queryForObject(
-                    "SELECT * FROM vote WHERE userID = ? AND threadID = ?",
-                    new Object[]{uid, threadID},  voteMapper);
+                    "SELECT * FROM vote WHERE LOWER(nickname) = LOWER(?) AND threadID = ?",
+                    new Object[]{nickname, threadID},  voteMapper);
             result.setResponse(vt, HttpStatus.OK);
             return result;
         }
@@ -55,11 +54,14 @@ public class ThreadDAO {
 
     public Response<List<Post>> getPosts(Thread thrd, Integer limit, Integer since, String sort, Boolean desc) {
         List<Object> tempObj = new ArrayList<>();
-        Integer[] myarr = new Integer[2];
+        Integer[] myarr3 = new Integer[3];
+        Integer[] myarr2 = new Integer[2];
 
         final StringBuilder postQuery = new StringBuilder( "SELECT * FROM post WHERE thread = ? " );
         tempObj.add(thrd.getId());
-        myarr[0] = thrd.getId();
+        myarr3[0] = thrd.getId();
+        myarr2[0] = thrd.getId();
+        myarr3[2] = since;
         if (sort == null) {
             sort = "flat";
         }
@@ -120,27 +122,50 @@ public class ThreadDAO {
                 }
                 else {
                         postQuery.append("AND path[1] = ?");
+//                        if (since != null) {
+//                            if (desc != null && desc) {
+//                                postQuery.append(" AND path[1] < (SELECT path[1] FROM post WHERE id = ?) ");
+//                            } else {
+//                                postQuery.append(" AND path[1] > (SELECT path[1] FROM post WHERE id = ?) ");
+//                            }
+//                        }
                         postQuery.append(" ORDER BY path ");
+
                         if (desc != null && desc) {
                             postQuery.append(" DESC, id DESC ");
                         }
                         else {
                             postQuery.append(" , id ");
                         }
+
                     try {
                             for (Post cur : parentsArray.getBody()) {
-                                myarr[1] = cur.getId();
-                                posts.addAll(template.query(postQuery.toString(), myarr, postMapper));
+                                myarr3[1] = cur.getId();
+                                myarr2[1] = cur.getId();
+
+//                                if (since != null) {
+//                                    posts.addAll(template.query(postQuery.toString(),
+//                                            myarr3, postMapper));
+//                                }
+//                                else {
+                                    posts.addAll(template.query(postQuery.toString(),
+                                            myarr2, postMapper));
+                                //}
 
                             }
                             result.setResponse(posts, HttpStatus.OK);
                             return result;
                         } catch (DataAccessException e) {
+                        //System.out.println("1");
+
                         result.setResponse(posts, HttpStatus.NOT_FOUND);
                             return result;
                         }
+
                 }
+
         }
+
         try {
             posts = template.query(postQuery.toString(),
                     tempObj.toArray(), postMapper);
@@ -148,14 +173,17 @@ public class ThreadDAO {
             return result;
         } catch (DataAccessException e) {
             result.setResponse(posts, HttpStatus.NOT_FOUND);
+            //System.out.println("2");
             return result;
         }
     }
 
     private Response<List<Post>> getParents(Thread thrd, Integer since, Integer limit, Boolean desc) {
         List<Object> tempObj = new ArrayList<>();
+
         final StringBuilder postQuery = new StringBuilder( "SELECT * FROM post WHERE thread = ? AND parent = 0 " );
         tempObj.add(thrd.getId());
+
         if (since != null) {
             if (desc != null && desc) {
                 postQuery.append(" AND path[1] < (SELECT path[1] FROM post WHERE id = ?)  ");
@@ -163,6 +191,9 @@ public class ThreadDAO {
                 postQuery.append(" AND path[1] > (SELECT path[1] FROM post WHERE id = ?)  ");
             }
             tempObj.add(since);
+            //tempObj.add(thrd.getId());
+
+
         }
         postQuery.append("ORDER BY id ");
         if (desc != null && desc) {
@@ -171,40 +202,57 @@ public class ThreadDAO {
         if (limit != null) {
             postQuery.append(" LIMIT ? ");
             tempObj.add(limit);
+
         }
+        //System.out.println(postQuery.toString());
+        //System.out.println(tempObj);
         final List<Post> res = template.query(
                 postQuery.toString(),
-                tempObj.toArray(), postMapper);
+                tempObj.toArray(), postMapper); //TODO
 
         Response<List<Post>> result = new Response<>();
         if (res.isEmpty()) {
             result.setResponse(res, HttpStatus.OK);
+            //System.out.println(postQuery.toString());
+            //System.out.println(tempObj);
+            //System.out.println("3");
+
             return result;
         }
         result.setResponse(res, HttpStatus.OK);
         return result;
     }
 
+    //@Transactional(isolation = Isolation.REPEATABLE_READ)
+//    private void threadsInc(String slug, int old) {
     private void threadsInc(String slug) {
+
+        GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
         try {
-            String sql = "UPDATE forum SET threads = threads + 1 WHERE LOWER (slug) = lower(?)";
-            template.update(sql,slug);
+            //old++;
+            //final int thrds = old;
+            template.update(con -> {
+                PreparedStatement statement = con.prepareStatement(
+                        "UPDATE forum SET threads = threads + 1 WHERE LOWER (slug) = lower(?)",
+                        PreparedStatement.RETURN_GENERATED_KEYS);
+                //statement.setInt(1, thrds);
+                statement.setString(1, slug);
+                return statement;
+            }, keyHolder);
         } catch (DuplicateKeyException e) {
+            System.out.println("asdg");
 
         } catch (DataAccessException e ) {
-
+            System.out.println("123");
         }
     }
     @Transactional(isolation = Isolation.READ_COMMITTED)
-    public Response<Thread> createThread(Thread body) {
+    public Response<Thread> createThread(Thread body, int old) {
         Response<Thread> result = new Response<>();
-        GeneratedKeyHolder keyHolder = new GeneratedKeyHolder(); //here
+        GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
 
         try {
-            //String sql = "INSERT INTO thread(votes, slug, author, forum, title, message, created) VALUES(?,?,?,?,?,?,?::TIMESTAMPTZ) returning id";
-            //int id = template.update(sql,body.getVotes(),body.getSlug(),body.getAuthor(),body.getForum(),body.getTitle(),body.getMessage(),body.getCreated(), Statement.RETURN_GENERATED_KEYS);
-
-                        template.update(con -> {
+            template.update(con -> {
                 PreparedStatement statement = con.prepareStatement(
                         "INSERT INTO thread(votes, slug, author, forum, title, message, created)"
                                 + " VALUES(?,?,?,?,?,?,?::TIMESTAMPTZ) "+" returning id",
@@ -218,16 +266,20 @@ public class ThreadDAO {
                 statement.setString(7, body.getCreated());
                 return statement;
             }, keyHolder);
+//            threadsInc(body.getForum(),old);
             threadsInc(body.getForum());
+
             body.setId(keyHolder.getKey().intValue()); // set Id
-//            body.setId(id); // set Id
             result.setResponse(body, HttpStatus.CREATED);
             return result;
+
         } catch (DuplicateKeyException e) {
             result.setResponse(new Thread(), HttpStatus.CONFLICT);
             return result;
+
         } catch (DataAccessException e) {
             result.setResponse(new Thread(), HttpStatus.NOT_FOUND);
+            System.out.println("here");
             return result;
         }
     }
@@ -244,6 +296,7 @@ public class ThreadDAO {
             result.setResponse(new Thread(), HttpStatus.NOT_FOUND);
             return result;
         }
+
     }
 
     public Response<Thread> getThreadById(int id) {
@@ -338,20 +391,35 @@ public class ThreadDAO {
     }
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
-    public Response<Vote> vote (String nickname,int userID, int threadID, int voice, String forum) {
+    public Response<Vote> vote (String nickname,int threadID, int voice, String forum) {
+
+        GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
+
         try {
-            String sql = "INSERT INTO vote(nickname, userID, threadID, voice, forum) VALUES (?,?,?,?,?)";
-            template.update(sql, nickname,userID, threadID, voice, forum);
-            return new Response<>(new Vote(nickname,userID,voice), HttpStatus.CREATED);
+            template.update(con -> {
+            PreparedStatement statement = con.prepareStatement(
+                    "INSERT INTO vote(nickname, threadID, voice, forum)"
+                            + " VALUES (?,?,?,?)",
+                    PreparedStatement.RETURN_GENERATED_KEYS);
+            statement.setString(1, nickname);
+            statement.setInt(2, threadID);
+            statement.setInt(3, voice);
+            statement.setString(4, forum);
+            return statement;
+        }, keyHolder);
+
+            return new Response<>(new Vote(nickname,voice), HttpStatus.CREATED);
         } catch(DuplicateKeyException e){
                 Response<Vote> res = new Response<>();
                 res.setResponse(new Vote(), HttpStatus.CONFLICT);
                 return res;
         }
+
     }
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public Response<Thread> updateThreadVoice (Thread thread, int voice, boolean revotes) {
+        GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
         if (revotes) {
             voice *= 2;
         }
@@ -359,8 +427,15 @@ public class ThreadDAO {
         int cur = thread.getVotes();
         int newVoice = cur + voice;
         try {
-            String sql = "UPDATE thread SET votes = ? WHERE id = ?";
-            template.update(sql, newVoice, threadID);
+            template.update(con -> {
+                PreparedStatement statement = con.prepareStatement(
+                        "UPDATE thread SET votes = ? WHERE id = ?",
+                        PreparedStatement.RETURN_GENERATED_KEYS);
+                statement.setInt(1, newVoice);
+                statement.setInt(2, threadID);
+                return statement;
+            }, keyHolder);
+
             Response<Thread> res = new Response<>();
             res.setResponse(thread, HttpStatus.OK);
             return res;
@@ -369,13 +444,24 @@ public class ThreadDAO {
             res.setResponse(new Thread(), HttpStatus.CONFLICT);
             return res;
         }
+
     }
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public Response<Thread> updateThread (Thread thread, int id) {
+        GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
         try {
-            String sql = "UPDATE thread SET title = COALESCE (?, title), message = COALESCE (?,message)  WHERE id = ?";
-            template.update(sql, thread.getTitle(), thread.getMessage(), id);
+            template.update(con -> {
+                PreparedStatement statement = con.prepareStatement(
+                        "UPDATE thread SET title = COALESCE (?, title)," +
+                                " message = COALESCE (?,message)  WHERE id = ?",
+                        PreparedStatement.RETURN_GENERATED_KEYS);
+                statement.setString(1, thread.getTitle());
+                statement.setString(2, thread.getMessage());
+                statement.setInt(3, id);
+                return statement;
+            }, keyHolder);
+
             Response<Thread> res = new Response<>();
             res.setResponse(thread, HttpStatus.OK);
             return res;
@@ -388,11 +474,22 @@ public class ThreadDAO {
     }
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
-    public Response<Vote> reVote (String nickname, int userID, int threadID, int voice) {
+    public Response<Vote> reVote (String nickname,int threadID, int voice) {
+        GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
+
         try {
-            String sql = "UPDATE vote SET voice = ? WHERE userID = ? AND threadID = ?";
-            template.update(sql, voice, userID, threadID);
-            return new Response<>(new Vote(nickname, userID, voice), HttpStatus.OK);
+            template.update(con -> {
+                PreparedStatement statement = con.prepareStatement(
+                        "UPDATE vote SET voice = ? WHERE LOWER(nickname) = LOWER(?)" +
+                                "AND threadID = ?",
+                        PreparedStatement.RETURN_GENERATED_KEYS);
+                statement.setInt(1, voice);
+                statement.setString(2, nickname);
+                statement.setInt(3, threadID);
+                return statement;
+            }, keyHolder);
+
+            return new Response<>(new Vote(nickname,voice), HttpStatus.OK);
         } catch(DuplicateKeyException e){
             Response<Vote> res = new Response<>();
             res.setResponse(new Vote(), HttpStatus.CONFLICT);
@@ -401,74 +498,54 @@ public class ThreadDAO {
 
     }
 
+//    public void postsInc(String slug, int inc, int old) {
     public void postsInc(String slug, int inc) {
-        try {
-            String sql = "UPDATE forum SET posts = posts + ? WHERE LOWER(slug) = lower(?)";
-            template.update(sql, inc, slug);
-        } catch (DuplicateKeyException e) {
 
+        GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
+        try {
+            //old+=inc;
+            //final int psts = old;
+            template.update(con -> {
+                PreparedStatement statement = con.prepareStatement(
+                        "UPDATE forum SET posts = posts + ? WHERE LOWER(slug) = lower(?)",
+                        PreparedStatement.RETURN_GENERATED_KEYS);
+                statement.setInt(1, inc);
+                statement.setString(2, slug);
+                return statement;
+            }, keyHolder);
+        } catch (DuplicateKeyException e) {
+            System.out.println("dsfhvbahdbv");
         } catch (DataAccessException e) {
+            System.out.println("bnmko");
 
         }
 
     }
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
-    public Response<List<Post>> createPosts(List<Post> posts) {
-        if (posts.isEmpty()) {
-            return new Response<>(posts, HttpStatus.CREATED);
-        }
-
-        int threadId = posts.get(0).getThread();
-
-        String sql2;
-        sql2 = "SELECT count(id) from Post WHERE thread = ? AND parent = 0";
-
-        boolean flag = (0 == (int) template.queryForObject(sql2,new Object[] { threadId }, Integer.class))
-                ? Boolean.FALSE : Boolean.TRUE;
-
-        if(flag == Boolean.FALSE) { // may be in current posts will be parent post
-            ListIterator<Post> listIter = posts.listIterator();
-
-            while(listIter.hasNext()){
-
-                if (listIter.next().getParent() == 0) {
-                    flag = true;
-                    break;
-                }
-            }
-        }
-
-        if (flag == Boolean.FALSE) {    // no parent message
-            Response<List<Post>> res = new Response<>();
-
-            res.setResponse(posts, HttpStatus.CONFLICT);
-            return res;
-        }
+    public Response<List<Post>> createPosts(List<Post> posts, int old) {
+        GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
         try {
-            int maxId = template.query("SELECT MAX(id) from post", (res, num) -> res.getInt(1)).get(0);
-            String sql = "INSERT INTO post(parent, author, message, isEdited, forum, created, thread, path) " +
-                    "VALUES (?,?,?,?,?,?::timestamptz,?, (SELECT path FROM Post WHERE id = ?) || ?)";
-            Response<List<Post>> res = new Response<>();
+            for (Post body: posts) {
 
-            template.batchUpdate(sql, new BatchPreparedStatementSetter() {
+                body.setCreated(posts.get(0).getCreated());
+                Response<Post> parent = postDAO.getPostById(body.getParent());
+                if (parent.getStatus() != HttpStatus.NOT_FOUND && parent.getBody().getThread() != body.getThread()) {
+                    Response<List<Post>> res = new Response<>();
+                    res.setResponse(posts, HttpStatus.CONFLICT);
+                    return res;
 
-                @Override
-                public void setValues(PreparedStatement statement, int i) throws SQLException {
-                    Post body = posts.get(i);
-                    body.setCreated(posts.get(0).getCreated());
-//                    Response<Post> parent = postDAO.getPostById(body.getParent());
-//                    if (parent.getStatus() != HttpStatus.NOT_FOUND && parent.getBody().getThread() != body.getThread()) {
-//                        res.setResponse(posts, HttpStatus.CONFLICT);
-//                        System.out.println("1");
-//
-//
-//                    } else if (parent.getStatus() == HttpStatus.NOT_FOUND && body.getParent() != 0) {
-//                        res.setResponse(posts, HttpStatus.CONFLICT);
-//                        System.out.println("2");
-//
-//                    }
-                    body.setId(maxId + i + 1);
+                } else if(parent.getStatus() == HttpStatus.NOT_FOUND && body.getParent() != 0) {
+                    Response<List<Post>> res = new Response<>();
+                    res.setResponse(posts, HttpStatus.CONFLICT);
+                    return res;
+                }
+
+                template.update(con -> {
+                    PreparedStatement statement = con.prepareStatement(
+                            "INSERT INTO post(parent, author, message, isEdited, forum, created, thread)"
+                                    + " VALUES (?,?,?,?,?,?::timestamptz,?)" + " returning id",
+                            PreparedStatement.RETURN_GENERATED_KEYS);
                     statement.setInt(1, body.getParent());
                     statement.setString(2, body.getAuthor());
                     statement.setString(3, body.getMessage());
@@ -476,40 +553,49 @@ public class ThreadDAO {
                     statement.setString(5, body.getForum());
                     statement.setString(6, body.getCreated());
                     statement.setInt(7, body.getThread());
-                    if (body.getParent() != 0) {
-                        statement.setInt(8, body.getParent());
-                    } else {
-                        statement.setInt(8, body.getId());
+
+                    return statement;
+                }, keyHolder);
+                body.setId(keyHolder.getKey().intValue());
+
+
+                template.update(con -> {
+                    ArrayList arr;
+                    if (body.getParent() == 0) {
+                        arr = new ArrayList<Object>(Arrays.asList(body.getId()));
                     }
-                    statement.setInt(9, body.getId());
-
-
-                }
-
-                @Override
-                public int getBatchSize() {
-                    return posts.size();
-                }
-
-            });
-
-            postsInc(posts.get(0).getForum(), posts.size());
-            if (res.getStatus() == HttpStatus.CONFLICT) {
-
-                return res;
+                    else {
+                        arr = new ArrayList<Object>(Arrays.asList(parent.getBody().getPath()));
+                        arr.add(body.getId());
+                    }
+                    PreparedStatement statement = con.prepareStatement(
+                            "UPDATE post SET path = ? WHERE id = ?",
+                            PreparedStatement.RETURN_GENERATED_KEYS);
+                    statement.setArray(1, con.createArrayOf("INT", arr.toArray()));
+                    statement.setInt(2, body.getId());
+                    return statement;
+                }, keyHolder);
             }
+            //System.out.println(old);
+            //System.out.println(posts.size());
+
+//            postsInc(posts.get(0).getForum(),posts.size(), old);
+            postsInc(posts.get(0).getForum(),posts.size());
+
+            Response<List<Post>> res = new Response<>();
             res.setResponse(posts, HttpStatus.CREATED);
             return res;
-        } catch (DataIntegrityViolationException e) {
+        } catch (DuplicateKeyException e) {
             Response<List<Post>> res = new Response<>();
             res.setResponse(posts, HttpStatus.CONFLICT);
-            System.out.println("wertyuio");
             return res;
-        }
 
+        }
     }
 
+
     private static RowMapper<Thread> threadMapper = (res, num) -> {
+
         int id = res.getInt("id");
         int votes = res.getInt("votes");
         String slug = res.getString("slug");
@@ -525,9 +611,7 @@ public class ThreadDAO {
     private static RowMapper<Vote> voteMapper = (res, num) -> {
         String nickname = res.getString("nickname");
         int voice = res.getInt("voice");
-        int userID = res.getInt("userID");
-
-        return new Vote(nickname, userID, voice);
+        return new Vote(nickname, voice);
     };
 
     private static final RowMapper<Post> postMapper = (res, num) -> {
@@ -544,5 +628,7 @@ public class ThreadDAO {
         return new Post(id, parent, thread, isEdited, author, message,forum, created, (Object[])path.getArray());
 
     };
+
+
 
 }

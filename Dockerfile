@@ -29,7 +29,6 @@ FROM ubuntu:16.04
     ENV WORK /opt/
     ADD / $WORK/
     WORKDIR $WORK
-ctional(isolation = Isolation.READ_COMMITTE
 
     RUN mvn package
 

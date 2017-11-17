@@ -5,14 +5,10 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
-import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import project.models.Forum;
-import java.sql.PreparedStatement;
-
-import project.models.Thread;
 import project.models.User;
 import project.utils.Response;
 
@@ -22,17 +18,15 @@ public class ForumDAO {
 
     private final JdbcTemplate template;
     private final UserDAO userDAO;
-    private final ThreadDAO threadDAO;
 
-    public ForumDAO(JdbcTemplate template, UserDAO userDAO,ThreadDAO threadDAO) {
+    public ForumDAO(JdbcTemplate template, UserDAO userDAO) {
         this.template = template;
         this.userDAO = userDAO;
-        this.threadDAO = threadDAO;
     }
 
     public void clear() {
         template.update(
-                "TRUNCATE users, forum, post, thread, vote RESTART IDENTITY CASCADE;" //TODO only users when connected
+                "TRUNCATE users, forum, post, thread, vote RESTART IDENTITY CASCADE;"
         );
     }
 
@@ -42,29 +36,18 @@ public class ForumDAO {
                 new Object[]{}, Integer.class);
     }
 
-    @Transactional(isolation = Isolation.REPEATABLE_READ)
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public Response<Forum> createForum(Forum body) {
         Response<Forum> result = new Response<>();
-        Response<User> res = userDAO.getUserByNick(body.getUser()); //TODO wtf stuff
+        Response<User> res = userDAO.getUserByNick(body.getUser());
         if (res.getStatus() == HttpStatus.NOT_FOUND) {
             result.setResponse(new Forum(), HttpStatus.NOT_FOUND);
             return result;
         }
         body.setUser(res.getBody().getNickname());
-        GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
         try {
-            template.update(con -> {
-                PreparedStatement statement = con.prepareStatement(
-                        "INSERT INTO forum(slug, title , \"user\", posts, threads)"
-                                + " VALUES(?,?,?,?,?)",
-                        PreparedStatement.RETURN_GENERATED_KEYS);
-                statement.setString(1, body.getSlug());
-                statement.setString(2, body.getTitle());
-                statement.setString(3, res.getBody().getNickname()); //TODO 19 test case problems
-                statement.setInt(4, body.getPosts());
-                statement.setInt(5, body.getThreads());
-                return statement;
-            }, keyHolder);
+            String sql = "INSERT INTO forum(slug, title ,\"user\", posts, threads) VALUES(?,?,?,?,?)";
+            template.update(sql, body.getSlug(), body.getTitle(),res.getBody().getNickname(),body.getPosts(),body.getThreads());
             result.setResponse(body, HttpStatus.CREATED);
             return result;
         } catch (DuplicateKeyException e) {

@@ -51,13 +51,6 @@ public class Post {
         }
 
 
-//        if (created == null) {
-//            Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-//            this.created = timestamp.toInstant().toString();
-//        } else {
-//            this.created = created.toInstant().toString();
-//        }
-
         this.message = message;
         this.isEdited = isEdited;
         this.thread = thread;

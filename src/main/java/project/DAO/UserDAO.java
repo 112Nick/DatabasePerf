@@ -1,7 +1,6 @@
 package project.DAO;
 
 import java.security.AccessControlException;
-import java.sql.PreparedStatement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,7 +9,6 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
-import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,18 +34,9 @@ public class UserDAO {
     @Transactional(isolation = Isolation.REPEATABLE_READ)
     public Response<User> createUser(User body)  {
         Response<User> result = new Response<>();
-        GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
         try {
-        template.update(con -> {
-            PreparedStatement statement = con.prepareStatement(
-                    "INSERT INTO users(fullname, nickname, email, about)" + " VALUES(?,?,?,?)" ,
-                    PreparedStatement.RETURN_GENERATED_KEYS);
-            statement.setString(1, body.getFullname());
-            statement.setString(2, body.getNickname());
-            statement.setString(3, body.getEmail());
-            statement.setString(4, body.getAbout());
-            return statement;
-        }, keyHolder);
+            String sql = "INSERT INTO users(fullname, nickname, email, about) VALUES(?,?,?,?)";
+            template.update(sql, body.getFullname(), body.getNickname(), body.getEmail(),body.getAbout());
         result.setResponse(body, HttpStatus.CREATED);
         return result;
         }
@@ -157,22 +146,9 @@ public class UserDAO {
     @Transactional(isolation = Isolation.REPEATABLE_READ)
     public Response<User> updateUser(User body) { //TODO some fix
         Response<User> result = new Response<>();
-
-        GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
-        try {template.update(con -> {
-            PreparedStatement statement = con.prepareStatement(
-                    "update users set " +
-                            "fullname = COALESCE(?, fullname), " +
-                            "about = COALESCE(?, about), " +
-                            "email = COALESCE(?, email) " +
-                            "where LOWER(nickname) = LOWER(?)",
-                    PreparedStatement.RETURN_GENERATED_KEYS);
-            statement.setString(1, body.getFullname());
-            statement.setString(2, body.getAbout());
-            statement.setString(3, body.getEmail());
-            statement.setString(4, body.getNickname());
-            return statement;
-        }, keyHolder);
+        try {
+            String sql = "update users set fullname = COALESCE(?, fullname), about = COALESCE(?, about), email = COALESCE(?, email) where LOWER(nickname) = LOWER(?)";
+            template.update(sql, body.getFullname(), body.getAbout(), body.getEmail(),body.getNickname());
             result.setResponse(body,HttpStatus.OK);
             return result;
         } catch (DuplicateKeyException e) {
@@ -193,6 +169,8 @@ public class UserDAO {
         if (res.wasNull()) {
             about = null;
         }
-        return new User(fullname, nickname, email, about);
+        Integer id = res.getInt("id");
+
+        return new User(id,fullname, nickname, email, about);
     };
 }

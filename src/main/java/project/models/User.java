@@ -21,11 +21,13 @@ public class User {
 
     @JsonCreator
     public User(
+            @JsonProperty("id") Integer id,
             @JsonProperty("fullname") String fullname,
             @JsonProperty("nickname") String nickname,
             @JsonProperty("email") String email,
             @JsonProperty("about") String about
     ) {
+        this.id = id;
         this.nickname = nickname;
         this.about = about;
         this.email = email;

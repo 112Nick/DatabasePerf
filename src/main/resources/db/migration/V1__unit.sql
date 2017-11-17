@@ -28,9 +28,8 @@ CREATE TABLE IF NOT EXISTS thread (
 );
 
 CREATE TABLE IF NOT EXISTS users (
-  fullname text,
   id SERIAL PRIMARY KEY,
-
+  fullname text,
   nickname  CITEXT COLLATE ucs_basic NOT NULL UNIQUE,
   email CITEXT NOT NULL UNIQUE,
   about text
@@ -50,6 +49,7 @@ CREATE TABLE IF NOT EXISTS post (
 
 CREATE TABLE IF NOT EXISTS vote (
   id SERIAL PRIMARY KEY,
+  userId INTEGER,
   nickname TEXT,
   threadID INTEGER,
   voice int,
@@ -63,9 +63,9 @@ CREATE INDEX IF NOT EXISTS index_forum_slug_id ON forum(slug, id);
 CREATE INDEX IF NOT EXISTS index_post_id_forum ON post (id, forum);
 CREATE INDEX IF NOT EXISTS index_post_id_thread ON post (id, thread);
 CREATE INDEX IF NOT EXISTS index_post_id_author ON post (id, author);
-CREATE INDEX IF NOT EXISTS index_post_thread ON post (thread ASC);
-CREATE INDEX IF NOT EXISTS index_post_parent ON post (parent ASC);
-CREATE INDEX IF NOT EXISTS index_post_path ON post (path ASC);
+-- CREATE INDEX IF NOT EXISTS index_post_thread ON post (thread ASC);
+-- CREATE INDEX IF NOT EXISTS index_post_parent ON post (parent ASC);
+-- CREATE INDEX IF NOT EXISTS index_post_path ON post (path ASC);
 CREATE INDEX IF NOT EXISTS index_post_id_thread_parent ON post (id, thread, parent);
 CREATE INDEX IF NOT EXISTS index_post_parent_thread ON post (parent, thread);
 CREATE INDEX IF NOT EXISTS index_post_forum ON post (forum);
@@ -83,11 +83,12 @@ CREATE INDEX IF NOT EXISTS index_vote_threadID_nicname ON vote (threadID, nickna
 
 CREATE INDEX IF NOT EXISTS index_thread_slug ON thread (LOWER(slug));
 CREATE INDEX IF NOT EXISTS index_thread_forum ON thread (LOWER(forum));
+CREATE INDEX IF NOT EXISTS index_thread_forum ON thread (created);
 CREATE INDEX IF NOT EXISTS index_thread_forum_created ON thread (LOWER(forum), created);
 
 
-CREATE INDEX IF NOT EXISTS index_user_nickname ON users (LOWER(nickname));
-CREATE INDEX IF NOT EXISTS index_user_email ON users (LOWER(email));
+CREATE UNIQUE INDEX IF NOT EXISTS index_user_nickname ON users (LOWER(nickname));
+CREATE UNIQUE INDEX IF NOT EXISTS index_user_email ON users (LOWER(email));
 CREATE INDEX IF NOT EXISTS index_user_nickname_email ON users (nickname, email);
 CREATE INDEX IF NOT EXISTS index_user_nickname_id ON users (nickname, id);
 

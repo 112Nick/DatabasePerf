@@ -63,7 +63,7 @@ public class ForumController {
         }
         body.setAuthor(res2.getBody().getNickname());
         body.setForum(res1.getBody().getSlug());
-        Response<Thread> res = threadDAO.createThread(body, res1.getBody().getThreads());
+        Response<Thread> res = threadDAO.createThread(body);
         if (res.getStatus() == HttpStatus.CONFLICT) {
             return ResponseEntity.status(res.getStatus()).body(threadDAO.getThread(body.getSlug()).getBody());
         }

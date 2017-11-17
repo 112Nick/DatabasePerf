@@ -52,8 +52,7 @@ public class ThreadController {
             }
         }
 
-        Response<List<Post>> res = threadDAO.createPosts(posts, forumDAO.getForum(exists.getBody().getForum()).getBody().getPosts());
-        //System.out.println(forumDAO.getForum(exists.getBody().getForum()).getBody().getSlug());
+        Response<List<Post>> res = threadDAO.createPosts(posts);
         if (res.getStatus() == HttpStatus.CONFLICT) {
             ErrMsg msg = new ErrMsg();
             return ResponseEntity.status(HttpStatus.CONFLICT).body(msg);
@@ -61,7 +60,7 @@ public class ThreadController {
         return ResponseEntity.status(res.getStatus()).body(res.getBody());
     }
 
-    @RequestMapping(path = "/{slug_or_id}/vote", method = RequestMethod.POST, produces = "application/json") //TODO optimize
+    @RequestMapping(path = "/{slug_or_id}/vote", method = RequestMethod.POST, produces = "application/json")
     public ResponseEntity<?> vote(@RequestBody  Vote vote, @PathVariable("slug_or_id") String slug_or_id) {
         Response<Thread> exists = threadDAO.getThreadBySLugOrId(slug_or_id);
         if (exists.getStatus() == HttpStatus.NOT_FOUND) {
@@ -75,15 +74,15 @@ public class ThreadController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(msg);
         }
         else {
-            Response<Vote> userVoted = threadDAO.getVote(vote.getNickname(), threadID);
+            Response<Vote> userVoted = threadDAO.getVote(vote.getNickname(),userExists.getBody().getId(), threadID);
             if (userVoted.getStatus() == HttpStatus.NOT_FOUND) {
-                threadDAO.vote(vote.getNickname(),threadID,vote.getVoice(), exists.getBody().getForum());
+                threadDAO.vote(vote.getNickname(),userExists.getBody().getId(),threadID,vote.getVoice(), exists.getBody().getForum());
                 threadDAO.updateThreadVoice(exists.getBody(), vote.getVoice(), false);
                 return ResponseEntity.status(HttpStatus.OK).body(threadDAO.getThreadBySLugOrId(slug_or_id).getBody());
             }
             else {
                 if (userVoted.getBody().getVoice() != vote.getVoice()) {
-                    threadDAO.reVote(vote.getNickname(),threadID, vote.getVoice());
+                    threadDAO.reVote(vote.getNickname(),userExists.getBody().getId(),threadID, vote.getVoice());
                     threadDAO.updateThreadVoice(exists.getBody(), vote.getVoice(), true);
                 }
                 return ResponseEntity.status(HttpStatus.OK).body(threadDAO.getThreadBySLugOrId(slug_or_id).getBody());

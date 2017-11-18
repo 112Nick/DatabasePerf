@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS thread (
   votes INTEGER,
   slug CITEXT UNIQUE ,
   forum TEXT NOT NULL ,
+  forumID INTEGER,
   author TEXT,
   title TEXT,
   message TEXT,

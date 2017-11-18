@@ -62,7 +62,7 @@ public class UserDAO {
         try {
             final User usr =  template.queryForObject(
                     "SELECT * FROM users WHERE LOWER(nickname) = LOWER(?)",
-                    new Object[]{nickname},  userMapper);
+                    new Object[]{nickname},  Mappers.userMapper);
             result.setResponse(usr, HttpStatus.OK);
             return result;
         }
@@ -102,7 +102,7 @@ public class UserDAO {
         try {
             final User usr = template.queryForObject(
                     "SELECT * FROM users WHERE LOWER(email) = LOWER(?)",
-                    new Object[]{email},  userMapper);
+                    new Object[]{email},  Mappers.userMapper);
             result.setResponse(usr, HttpStatus.OK);
             return result;
         }
@@ -115,7 +115,8 @@ public class UserDAO {
     public Response<List<User>> getUsers(String slug, Integer limit, String since, Boolean desc) {
 
         List<Object> tempObj = new ArrayList<>();
-
+        //TODO forumid
+        //TODO newTable
         final StringBuilder postQuery = new StringBuilder(
                 "SELECT * FROM users WHERE nickname = ANY " +
                         "( " +
@@ -145,7 +146,7 @@ public class UserDAO {
         List<User> users = new ArrayList<>();
         try {
             users = template.query(postQuery.toString(),
-                    tempObj.toArray(), userMapper);
+                    tempObj.toArray(), Mappers.userMapper);
             result.setResponse(users, HttpStatus.OK);
             return result;
         } catch (DataAccessException e) {
@@ -155,7 +156,7 @@ public class UserDAO {
     }
 
     @Transactional(isolation = Isolation.REPEATABLE_READ)
-    public Response<User> updateUser(User body) { //TODO some fix
+    public Response<User> updateUser(User body) {
         Response<User> result = new Response<>();
 
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
@@ -185,14 +186,14 @@ public class UserDAO {
         }
     }
 
-    private static final RowMapper<User> userMapper = (res, num) -> {
-        String nickname = res.getString("nickname");
-        String email = res.getString("email");
-        String fullname = res.getString("fullname");
-        String about = res.getString("about");
-        if (res.wasNull()) {
-            about = null;
-        }
-        return new User(fullname, nickname, email, about);
-    };
+//    private static final RowMapper<User> userMapper = (res, num) -> {
+//        String nickname = res.getString("nickname");
+//        String email = res.getString("email");
+//        String fullname = res.getString("fullname");
+//        String about = res.getString("about");
+//        if (res.wasNull()) {
+//            about = null;
+//        }
+//        return new User(fullname, nickname, email, about);
+//    };
 }

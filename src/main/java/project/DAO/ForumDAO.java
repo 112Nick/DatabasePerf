@@ -12,7 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 import project.models.Forum;
 import java.sql.PreparedStatement;
 
-import project.models.Thread;
 import project.models.User;
 import project.utils.Response;
 
@@ -45,7 +44,7 @@ public class ForumDAO {
     @Transactional(isolation = Isolation.REPEATABLE_READ)
     public Response<Forum> createForum(Forum body) {
         Response<Forum> result = new Response<>();
-        Response<User> res = userDAO.getUserByNick(body.getUser()); //TODO wtf stuff
+        Response<User> res = userDAO.getUserByNick(body.getUser());
         if (res.getStatus() == HttpStatus.NOT_FOUND) {
             result.setResponse(new Forum(), HttpStatus.NOT_FOUND);
             return result;
@@ -60,7 +59,7 @@ public class ForumDAO {
                         PreparedStatement.RETURN_GENERATED_KEYS);
                 statement.setString(1, body.getSlug());
                 statement.setString(2, body.getTitle());
-                statement.setString(3, res.getBody().getNickname()); //TODO 19 test case problems
+                statement.setString(3, res.getBody().getNickname());
                 statement.setInt(4, body.getPosts());
                 statement.setInt(5, body.getThreads());
                 return statement;
@@ -83,7 +82,7 @@ public class ForumDAO {
         try {
             final Forum f= template.queryForObject(
                     "SELECT * FROM forum WHERE LOWER(slug) = LOWER(?)",
-                    new Object[]{slug},  forumMapper);
+                    new Object[]{slug},  Mappers.forumMapper);
             result.setResponse(f, HttpStatus.OK);
             return result;
         } catch (DataAccessException e) {
@@ -93,14 +92,14 @@ public class ForumDAO {
     }
 
 
-    private static RowMapper<Forum> forumMapper = (res, num) -> {
-        String slug = res.getString("slug");
-        String user = res.getString("user");
-        String title = res.getString("title");
-        int posts = res.getInt("posts");
-        int threads = res.getInt("threads");
-        return new Forum(slug, user, title, posts, threads);
-    };
+//    private static RowMapper<Forum> forumMapper = (res, num) -> {
+//        String slug = res.getString("slug");
+//        String user = res.getString("user");
+//        String title = res.getString("title");
+//        int posts = res.getInt("posts");
+//        int threads = res.getInt("threads");
+//        return new Forum(slug, user, title, posts, threads);
+//    };
 
 }
 

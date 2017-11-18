@@ -42,7 +42,7 @@ public class ThreadDAO {
         try {
             final Vote vt =  template.queryForObject(
                     "SELECT * FROM vote WHERE LOWER(nickname) = LOWER(?) AND threadID = ?",
-                    new Object[]{nickname, threadID},  voteMapper);
+                    new Object[]{nickname, threadID},  Mappers.voteMapper);
             result.setResponse(vt, HttpStatus.OK);
             return result;
         }
@@ -149,7 +149,7 @@ public class ThreadDAO {
 //                                }
 //                                else {
                                     posts.addAll(template.query(postQuery.toString(),
-                                            myarr2, postMapper));
+                                            myarr2, Mappers.postMapper));
                                 //}
 
                             }
@@ -168,7 +168,7 @@ public class ThreadDAO {
 
         try {
             posts = template.query(postQuery.toString(),
-                    tempObj.toArray(), postMapper);
+                    tempObj.toArray(), Mappers.postMapper);
             result.setResponse(posts, HttpStatus.OK);
             return result;
         } catch (DataAccessException e) {
@@ -208,7 +208,7 @@ public class ThreadDAO {
         //System.out.println(tempObj);
         final List<Post> res = template.query(
                 postQuery.toString(),
-                tempObj.toArray(), postMapper); //TODO
+                tempObj.toArray(), Mappers.postMapper);
 
         Response<List<Post>> result = new Response<>();
         if (res.isEmpty()) {
@@ -289,7 +289,7 @@ public class ThreadDAO {
         try {
             final Thread t= template.queryForObject(
                     "SELECT * FROM thread WHERE LOWER(slug) = LOWER(?)",
-                    new Object[]{slug},  threadMapper);
+                    new Object[]{slug},  Mappers.threadMapper);
             result.setResponse(t, HttpStatus.OK);
             return result;
         } catch (DataAccessException e) {
@@ -304,7 +304,7 @@ public class ThreadDAO {
         try {
             final Thread t= template.queryForObject(
                     "SELECT * FROM thread WHERE id = ?",
-                    new Object[]{id},  threadMapper);
+                    new Object[]{id},  Mappers.threadMapper);
             result.setResponse(t, HttpStatus.OK);
             return result;
         } catch (DataAccessException e) {
@@ -339,7 +339,7 @@ public class ThreadDAO {
     public Response<List<Thread>> getThreadByForum(String forum) {
         final List<Thread> res = template.query(
                 "SELECT * FROM thread WHERE lower(forum) = lower(?)",
-                new Object[]{forum}, threadMapper);
+                new Object[]{forum}, Mappers.threadMapper);
         Response<List<Thread>> result = new Response<>();
 
         if (res.isEmpty()) {
@@ -357,7 +357,7 @@ public class ThreadDAO {
             return threads;
         }
         List<Object> tempObj = new ArrayList<>();
-
+        //TODO forumid
         final StringBuilder postQuery = new StringBuilder(
                 "SELECT * FROM thread WHERE LOWER(forum) = LOWER(?) ");
         tempObj.add(forum);
@@ -381,7 +381,7 @@ public class ThreadDAO {
         List<Thread> threads1 = new ArrayList<>();
         try {
             threads1 = template.query(postQuery.toString(),
-                    tempObj.toArray(), threadMapper);
+                    tempObj.toArray(), Mappers.threadMapper);
             result.setResponse(threads1, HttpStatus.OK);
             return result;
         } catch (DataAccessException e) {
@@ -594,40 +594,40 @@ public class ThreadDAO {
     }
 
 
-    private static RowMapper<Thread> threadMapper = (res, num) -> {
+//    private static RowMapper<Thread> threadMapper = (res, num) -> {
+//
+//        int id = res.getInt("id");
+//        int votes = res.getInt("votes");
+//        String slug = res.getString("slug");
+//        String author = res.getString("author");
+//        String forum = res.getString("forum");
+//        String title = res.getString("title");
+//        String message = res.getString("message");
+//        Timestamp created = res.getTimestamp("created");
+//
+//        return new Thread(id, votes, slug, author, forum, title, message, created);
+//    };
+//
+//    private static RowMapper<Vote> voteMapper = (res, num) -> {
+//        String nickname = res.getString("nickname");
+//        int voice = res.getInt("voice");
+//        return new Vote(nickname, voice);
+//    };
 
-        int id = res.getInt("id");
-        int votes = res.getInt("votes");
-        String slug = res.getString("slug");
-        String author = res.getString("author");
-        String forum = res.getString("forum");
-        String title = res.getString("title");
-        String message = res.getString("message");
-        Timestamp created = res.getTimestamp("created");
-
-        return new Thread(id, votes, slug, author, forum, title, message, created);
-    };
-
-    private static RowMapper<Vote> voteMapper = (res, num) -> {
-        String nickname = res.getString("nickname");
-        int voice = res.getInt("voice");
-        return new Vote(nickname, voice);
-    };
-
-    private static final RowMapper<Post> postMapper = (res, num) -> {
-        int id = res.getInt("id");
-        int parent = res.getInt("parent");
-        int thread = res.getInt("thread");
-        boolean isEdited = res.getBoolean("isEdited");
-        String forum = res.getString("forum");
-        String author = res.getString("author");
-        String message = res.getString("message");
-        Timestamp created = res.getTimestamp("created");
-        Array path = res.getArray("path");
-
-        return new Post(id, parent, thread, isEdited, author, message,forum, created, (Object[])path.getArray());
-
-    };
+//    private static final RowMapper<Post> postMapper = (res, num) -> {
+//        int id = res.getInt("id");
+//        int parent = res.getInt("parent");
+//        int thread = res.getInt("thread");
+//        boolean isEdited = res.getBoolean("isEdited");
+//        String forum = res.getString("forum");
+//        String author = res.getString("author");
+//        String message = res.getString("message");
+//        Timestamp created = res.getTimestamp("created");
+//        Array path = res.getArray("path");
+//
+//        return new Post(id, parent, thread, isEdited, author, message,forum, created, (Object[])path.getArray());
+//
+//    };
 
 
 

@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import project.models.Post;
 import project.utils.Response;
+import project.DAO.Mappers;
 
 import java.sql.Array;
 import java.sql.PreparedStatement;
@@ -41,7 +42,7 @@ public class PostDAO {
         try {
             final Post pst =  template.queryForObject(
                     "SELECT * FROM post WHERE id = ?",
-                    new Object[]{id},  postMapper);
+                    new Object[]{id},  Mappers.postMapper);
             result.setResponse(pst, HttpStatus.OK);
             return result;
         }
@@ -76,18 +77,18 @@ public class PostDAO {
         }
     }
 
-    private static final RowMapper<Post> postMapper = (res, num) -> {
-        int id = res.getInt("id");
-        int parent = res.getInt("parent");
-        int thread = res.getInt("thread");
-        boolean isEdited = res.getBoolean("isEdited");
-        String forum = res.getString("forum");
-        String author = res.getString("author");
-        String message = res.getString("message");
-        Timestamp created = res.getTimestamp("created");
-        Array path = res.getArray("path");
-
-        return new Post(id, parent, thread, isEdited, author, message,forum, created, (Object[])path.getArray());
-
-    };
+//    private static final RowMapper<Post> postMapper = (res, num) -> {
+//        int id = res.getInt("id");
+//        int parent = res.getInt("parent");
+//        int thread = res.getInt("thread");
+//        boolean isEdited = res.getBoolean("isEdited");
+//        String forum = res.getString("forum");
+//        String author = res.getString("author");
+//        String message = res.getString("message");
+//        Timestamp created = res.getTimestamp("created");
+//        Array path = res.getArray("path");
+//
+//        return new Post(id, parent, thread, isEdited, author, message,forum, created, (Object[])path.getArray());
+//
+//    };
 }

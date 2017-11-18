@@ -13,6 +13,7 @@ public class Thread {
     private  static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
     private int id;
     private int votes;
+    private int forumID;
     private String slug;
     private String author;
     private String forum;
@@ -23,6 +24,8 @@ public class Thread {
     public Thread() {
         this.id = -1;
         this.votes = -1;
+        this.forumID = -1;
+
         this.slug = "";
         this.author = "";
         this.forum = "";
@@ -33,6 +36,7 @@ public class Thread {
     @JsonCreator
     public Thread(
             @JsonProperty("id") int id,
+            @JsonProperty("forumID") int fid,
             @JsonProperty("votes") int votes,
             @JsonProperty("slug") String slug,
             @JsonProperty("author") String author,
@@ -42,6 +46,7 @@ public class Thread {
             @JsonProperty("created") Timestamp created
     ) {
         this.id = id;
+        this.forumID = fid;
         this.votes = votes;
         this.slug = slug;
         this.author = author;

@@ -48,8 +48,10 @@ public class ThreadController {
             Response<User> userExists = userDAO.getUserByNick(body.getAuthor());
             if (userExists.getStatus() == HttpStatus.NOT_FOUND) {
                 ErrMsg msg = new ErrMsg();
+                //System.out.println(us);
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(msg);
             }
+            userDAO.addUser(userExists.getBody(), exists.getBody().getForumID());
         }
 
         Response<List<Post>> res = threadDAO.createPosts(posts, forumDAO.getForum(exists.getBody().getForum()).getBody().getPosts());

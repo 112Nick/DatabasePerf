@@ -6,6 +6,8 @@ DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS post;
 DROP TABLE IF EXISTS vote;
 DROP TABLE IF EXISTS thread;
+DROP TABLE IF EXISTS forum_users;
+
 
 CREATE TABLE IF NOT EXISTS forum (
   id SERIAL PRIMARY KEY,
@@ -57,6 +59,16 @@ CREATE TABLE IF NOT EXISTS vote (
   forum CITEXT
 );
 
+CREATE TABLE IF NOT EXISTS forum_users (
+  id SERIAL PRIMARY KEY,
+  --userId INTEGER,
+  fullname text,
+  nickname  CITEXT COLLATE ucs_basic NOT NULL,
+  email CITEXT,
+  about text,
+  forumID INTEGER,
+  UNIQUE (forumID, nickname)
+);
 
 
 -- CREATE INDEX IF NOT EXISTS index_forum_slug_id ON forum(slug, id);

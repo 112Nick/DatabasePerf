@@ -111,6 +111,12 @@ public class Thread {
         this.forum = forum;
     }
 
+    public void setForumID(int forum) {
+        this.forumID = forum;
+    }
+
+    public int getForumID() {return this.forumID; }
+
     public void setId(int id) {
         this.id = id;
     }

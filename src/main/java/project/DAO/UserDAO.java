@@ -57,6 +57,31 @@ public class UserDAO {
         }
     }
 
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
+    public Response<User> addUser(User body, int forumID)  {
+        Response<User> result = new Response<>();
+        GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
+        try {
+            template.update(con -> {
+                PreparedStatement statement = con.prepareStatement(
+                        "INSERT INTO forum_users(fullname, nickname, email, about, forumID)" + " VALUES(?,?,?,?,?)" ,
+                        PreparedStatement.RETURN_GENERATED_KEYS);
+                statement.setString(1, body.getFullname());
+                statement.setString(2, body.getNickname());
+                statement.setString(3, body.getEmail());
+                statement.setString(4, body.getAbout());
+                statement.setInt(5, forumID);
+                return statement;
+            }, keyHolder);
+            result.setResponse(body, HttpStatus.CREATED);
+            return result;
+        }
+        catch (DuplicateKeyException e) {
+            result.setResponse(body, HttpStatus.CONFLICT);
+            return result;
+        }
+    }
+
     public Response<User> getUserByNick(String nickname)  {
         Response<User> result = new Response<>();
         try {
@@ -112,20 +137,23 @@ public class UserDAO {
         }
     }
 
-    public Response<List<User>> getUsers(String slug, Integer limit, String since, Boolean desc) {
+    public Response<List<User>> getUsers(int forumID, Integer limit, String since, Boolean desc) {
 
         List<Object> tempObj = new ArrayList<>();
         //TODO forumid
         //TODO newTable
         final StringBuilder postQuery = new StringBuilder(
-                "SELECT * FROM users WHERE nickname = ANY " +
-                        "( " +
-                        "(SELECT DISTINCT author FROM post WHERE LOWER(forum) = LOWER(?)) " +
-                        "UNION " +
-                        "(SELECT DISTINCT author FROM thread WHERE LOWER(forum) = LOWER(?)) " +
-                        ") ");
-        tempObj.add(slug);
-        tempObj.add(slug);
+                "SELECT nickname, fullname, email, about FROM forum_users WHERE forumID = ? ");
+//                "SELECT * FROM users WHERE nickname = ANY " +
+//                        "( " +
+//                        "(SELECT DISTINCT author FROM post WHERE LOWER(forum) = LOWER(?)) " +
+//                        "UNION " +
+//                        "(SELECT DISTINCT author FROM thread WHERE LOWER(forum) = LOWER(?)) " +
+//                        ") ");
+//        tempObj.add(slug);
+//        tempObj.add(slug);
+
+        tempObj.add(forumID);
         if (since != null) {
             if (desc != null && desc) {
                 postQuery.append("AND LOWER(nickname) < LOWER(?) ");
@@ -151,6 +179,7 @@ public class UserDAO {
             return result;
         } catch (DataAccessException e) {
             result.setResponse(users, HttpStatus.NOT_FOUND);
+            System.out.println("qweasdZX");
             return result;
         }
     }

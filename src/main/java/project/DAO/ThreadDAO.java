@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import project.models.Post;
 import project.models.Thread;
+import project.models.User;
 import project.models.Vote;
 import project.utils.Response;
 
@@ -26,9 +27,13 @@ import java.util.List;
 public class ThreadDAO {
     private final JdbcTemplate template;
     private final PostDAO postDAO;
-    public ThreadDAO(JdbcTemplate template, PostDAO postDAO) {
+    private final UserDAO userDAO;
+
+    public ThreadDAO(JdbcTemplate template, PostDAO postDAO, UserDAO userDAO) {
         this.template = template;
         this.postDAO = postDAO;
+        this.userDAO = userDAO;
+
     }
 
     public Integer count() {
@@ -254,8 +259,8 @@ public class ThreadDAO {
         try {
             template.update(con -> {
                 PreparedStatement statement = con.prepareStatement(
-                        "INSERT INTO thread(votes, slug, author, forum, title, message, created)"
-                                + " VALUES(?,?,?,?,?,?,?::TIMESTAMPTZ) "+" returning id",
+                        "INSERT INTO thread(votes, slug, author, forum, title, message, created, forumid)"
+                                + " VALUES(?,?,?,?,?,?,?::TIMESTAMPTZ,?) "+" returning id",
                         PreparedStatement.RETURN_GENERATED_KEYS);
                 statement.setInt(1, body.getVotes());
                 statement.setString(2, body.getSlug());
@@ -264,6 +269,8 @@ public class ThreadDAO {
                 statement.setString(5, body.getTitle());
                 statement.setString(6, body.getMessage());
                 statement.setString(7, body.getCreated());
+                statement.setInt(8, body.getForumID());
+
                 return statement;
             }, keyHolder);
 //            threadsInc(body.getForum(),old);
@@ -351,16 +358,16 @@ public class ThreadDAO {
     }
 
 
-    public Response<List<Thread>> getThreads(String forum, Integer limit, String since, Boolean desc) {
-        Response<List<Thread>> threads = getThreadByForum(forum);
-        if (threads.getStatus() == HttpStatus.NOT_FOUND) {
-            return threads;
-        }
+    public Response<List<Thread>> getThreads(String forum, int forumID, Integer limit, String since, Boolean desc) {
+//        Response<List<Thread>> threads = getThreadByForum(forum);
+//        if (threads.getStatus() == HttpStatus.NOT_FOUND) {
+//            System.out.println("asdcvghn");
+//            return threads;
+//        }
         List<Object> tempObj = new ArrayList<>();
-        //TODO forumid
         final StringBuilder postQuery = new StringBuilder(
-                "SELECT * FROM thread WHERE LOWER(forum) = LOWER(?) ");
-        tempObj.add(forum);
+                "SELECT * FROM thread WHERE forumID = ? ");
+        tempObj.add(forumID);
         if (since != null) {
             if (desc != null && desc) {
                 postQuery.append("AND created <= ?::timestamptz "); // ::timestamptz
@@ -386,6 +393,7 @@ public class ThreadDAO {
             return result;
         } catch (DataAccessException e) {
             result.setResponse(threads1, HttpStatus.NOT_FOUND);
+            System.out.println("hgjghghghgh");
             return result;
         }
     }
@@ -523,11 +531,18 @@ public class ThreadDAO {
     }
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
+//    public Response<List<Post>> createPosts(List<Post> posts, int old, User us, int forumID) {
     public Response<List<Post>> createPosts(List<Post> posts, int old) {
+
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
         try {
             for (Post body: posts) {
-
+                Response<User> userExists = userDAO.getUserByNick(body.getAuthor());
+                if (userExists.getStatus() == HttpStatus.NOT_FOUND) {
+                    Response<List<Post>> res = new Response<>();
+                    res.setResponse(posts, HttpStatus.NOT_FOUND);
+                    return res;
+                }
                 body.setCreated(posts.get(0).getCreated());
                 Response<Post> parent = postDAO.getPostById(body.getParent());
                 if (parent.getStatus() != HttpStatus.NOT_FOUND && parent.getBody().getThread() != body.getThread()) {
@@ -581,7 +596,7 @@ public class ThreadDAO {
 
 //            postsInc(posts.get(0).getForum(),posts.size(), old);
             postsInc(posts.get(0).getForum(),posts.size());
-
+            //userDAO.addUser(us,forumID);
             Response<List<Post>> res = new Response<>();
             res.setResponse(posts, HttpStatus.CREATED);
             return res;

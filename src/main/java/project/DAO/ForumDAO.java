@@ -31,7 +31,7 @@ public class ForumDAO {
 
     public void clear() {
         template.update(
-                "TRUNCATE users, forum, post, thread, vote RESTART IDENTITY CASCADE;" //TODO only users when connected
+                "TRUNCATE users, forum, post, thread, vote, forum_users RESTART IDENTITY CASCADE;" //TODO only users when connected
         );
     }
 

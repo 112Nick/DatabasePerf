@@ -70,41 +70,79 @@ CREATE TABLE IF NOT EXISTS forum_users (
   UNIQUE (forumID, nickname)
 );
 
--- CREATE INDEX IF NOT EXISTS index_forum_slug_id ON forum(slug, id);
+
+CREATE INDEX IF NOT EXISTS forum_slug_id ON forum(slug, id); --works, no perf+, fill 20 min (18)
 --
--- CREATE INDEX IF NOT EXISTS index_post_id_forum ON post (id, forum);
--- CREATE INDEX IF NOT EXISTS index_post_id_thread ON post (id, thread);
--- CREATE INDEX IF NOT EXISTS index_post_id_author ON post (id, author);
--- -- CREATE INDEX IF NOT EXISTS index_post_thread ON post (thread ASC);
--- -- CREATE INDEX IF NOT EXISTS index_post_parent ON post (parent ASC);
--- -- CREATE INDEX IF NOT EXISTS index_post_path ON post (path ASC);
+CREATE INDEX IF NOT EXISTS index_post_id_forum ON post (id, forum); --works, no perf+, fill 19 min
+--CREATE INDEX IF NOT EXISTS index_post_id_thread ON post (id, thread);--doesnt work
+ CREATE INDEX IF NOT EXISTS index_post_id_author ON post (id, author); -- works, no perf+, fill 20 min
+-- CREATE INDEX IF NOT EXISTS index_post_thread ON post (thread ASC);--doesnt work
+CREATE INDEX IF NOT EXISTS index_post_parent ON post (parent ASC);-- works
+CREATE INDEX IF NOT EXISTS index_post_path ON post (path ASC);-- works
 -- CREATE INDEX IF NOT EXISTS index_post_id_thread_parent ON post (id, thread, parent);
 -- CREATE INDEX IF NOT EXISTS index_post_parent_thread ON post (parent, thread);
--- CREATE INDEX IF NOT EXISTS index_post_forum ON post (forum);
+CREATE INDEX IF NOT EXISTS index_post_forum ON post (forum);-- works
 -- CREATE INDEX IF NOT EXISTS index_post_thread_id ON post (thread, id);
 -- CREATE INDEX IF NOT EXISTS index_post_thread_path ON post (thread, path);
--- CREATE INDEX IF NOT EXISTS index_post_parent_thread_path ON post (parent, thread, path);
+CREATE INDEX IF NOT EXISTS index_post_parent_thread_path ON post (parent, path);-- works
 -- CREATE INDEX IF NOT EXISTS index_post_path_thread ON post (path, thread);
--- CREATE INDEX IF NOT EXISTS index_post_path_created ON post (path, created);
---
---
--- CREATE INDEX IF NOT EXISTS index_vote_id ON vote (id);
--- CREATE INDEX IF NOT EXISTS index_vote_id_nicnkname ON vote (id, nickname);
--- CREATE INDEX IF NOT EXISTS index_vote_threadID_nicname ON vote (threadID, nickname);
---
---
--- CREATE INDEX IF NOT EXISTS index_thread_slug ON thread (LOWER(slug));
--- CREATE INDEX IF NOT EXISTS index_thread_forum ON thread (LOWER(forum));
--- CREATE INDEX IF NOT EXISTS index_thread_forum ON thread (created);
--- CREATE INDEX IF NOT EXISTS index_thread_forum_created ON thread (LOWER(forum), created);
---
---
--- CREATE UNIQUE INDEX IF NOT EXISTS index_user_nickname ON users (LOWER(nickname));
--- CREATE UNIQUE INDEX IF NOT EXISTS index_user_email ON users (LOWER(email));
--- CREATE INDEX IF NOT EXISTS index_user_nickname_email ON users (nickname, email);
--- CREATE INDEX IF NOT EXISTS index_user_nickname_id ON users (nickname, id);
---
+CREATE INDEX IF NOT EXISTS index_post_path_created ON post (path, created);--works
 
+--
+-- --All works
+CREATE INDEX IF NOT EXISTS index_vote_id ON vote (id);
+CREATE INDEX IF NOT EXISTS index_vote_id_nicnkname ON vote (id, nickname);
+-- CREATE INDEX IF NOT EXISTS index_vote_threadID_nicname ON vote (threadID, nickname);
+-- --
+-- --All works
+CREATE INDEX IF NOT EXISTS index_thread_slug ON thread (LOWER(slug));
+CREATE INDEX IF NOT EXISTS index_thread_forum ON thread (LOWER(forum));
+CREATE INDEX IF NOT EXISTS index_thread_forum ON thread (created);
+CREATE INDEX IF NOT EXISTS index_thread_forum_created ON thread (LOWER(forum), created);
+-- --
+-- --All works
+CREATE UNIQUE INDEX IF NOT EXISTS index_user_nickname ON users (LOWER(nickname));
+CREATE UNIQUE INDEX IF NOT EXISTS index_user_email ON users (LOWER(email));
+CREATE INDEX IF NOT EXISTS index_user_nickname_email ON users (nickname, email);
+CREATE INDEX IF NOT EXISTS index_user_nickname_id ON users (nickname, id);
+-- --
+
+-- CREATE UNIQUE INDEX vote_user_thread
+--   ON vote (userID, threadID);
+--
+--
+--
+--
+-- CREATE INDEX thread_forum_created
+--   ON thread (forumID, created); -----+++++
+--
+-- CREATE INDEX thread_slug
+--   ON thread (slug); ---++++
+--
+--
+-- CREATE INDEX users_on_forum_forumid_nick
+--   ON forum_users (forumID, nickname); -----+++
+--
+--
+--
+--
+-- --
+-- -- CREATE INDEX post_threadid_iD_created
+-- --   ON post (thread, id, created); --++++
+--
+-- CREATE INDEX post_parnt_threadid_path
+--   ON post (parent, thread, path);--++++
+--
+-- CREATE INDEX post_tid_path
+--   ON post (thread, path);--++++
+--
+--
+-- CREATE INDEX forum_slug
+--   ON forum (slug);-----+++++
+--
+-- CREATE INDEX users_nick
+--   ON users (nickname); --++++++
+--
 
 
 

@@ -19,19 +19,16 @@ import java.util.List;
 public class ThreadController {
     private final ThreadDAO threadDAO;
     private final UserDAO userDAO;
-    private final ForumDAO forumDAO;
 
 
-    public ThreadController(ThreadDAO threadDAO,UserDAO userDAO,ForumDAO forumDAO ) {
+    public ThreadController(ThreadDAO threadDAO,UserDAO userDAO) {
         this.threadDAO = threadDAO;
         this.userDAO = userDAO;
-        this.forumDAO = forumDAO;
 
     }
 
     @RequestMapping(path = "/{slug_or_id}/create", method = RequestMethod.POST, produces = "application/json")
     public ResponseEntity<?> createForumThread(@RequestBody  List<Post> posts, @PathVariable("slug_or_id") String slug_or_id) {
-
         Response<Thread> exists = threadDAO.getThreadBySLugOrId(slug_or_id);
         if (exists.getStatus() == HttpStatus.NOT_FOUND) {
           ErrMsg msg = new ErrMsg();
@@ -48,7 +45,6 @@ public class ThreadController {
             Response<User> userExists = userDAO.getUserByNick(body.getAuthor());
             if (userExists.getStatus() == HttpStatus.NOT_FOUND) {
                 ErrMsg msg = new ErrMsg();
-                //System.out.println(us);
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(msg);
             }
             if (userExists.getStatus() == HttpStatus.OK) {
@@ -56,9 +52,7 @@ public class ThreadController {
 
             }
         }
-
-        Response<List<Post>> res = threadDAO.createPosts(posts, forumDAO.getForum(exists.getBody().getForum()).getBody().getPosts());
-        //System.out.println(forumDAO.getForum(exists.getBody().getForum()).getBody().getSlug());
+        Response<List<Post>> res = threadDAO.createPosts(posts);
         if (res.getStatus() == HttpStatus.CONFLICT) {
             ErrMsg msg = new ErrMsg();
             return ResponseEntity.status(HttpStatus.CONFLICT).body(msg);
@@ -80,6 +74,7 @@ public class ThreadController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(msg);
         }
         else {
+            //TODO userID
             Response<Vote> userVoted = threadDAO.getVote(vote.getNickname(), threadID);
             if (userVoted.getStatus() == HttpStatus.NOT_FOUND) {
                 threadDAO.vote(vote.getNickname(),threadID,vote.getVoice(), exists.getBody().getForum());
@@ -120,7 +115,7 @@ public class ThreadController {
         Response<List<Post>> res =  threadDAO.getPosts(exists.getBody(), limit, since, sort, desc);
         if (res.getStatus() == HttpStatus.NOT_FOUND) {
             ErrMsg msg = new ErrMsg();
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("dgdias");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(msg);
 
         }
         return ResponseEntity.status(HttpStatus.OK).body(res.getBody());

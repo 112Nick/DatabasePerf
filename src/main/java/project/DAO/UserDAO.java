@@ -9,7 +9,6 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -33,7 +32,8 @@ public class UserDAO {
                 "SELECT COUNT(*) FROM users;",
                 new Object[]{}, Integer.class);
     }
-    @Transactional(isolation = Isolation.REPEATABLE_READ)
+
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public Response<User> createUser(User body)  {
         Response<User> result = new Response<>();
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
@@ -57,7 +57,7 @@ public class UserDAO {
         }
     }
 
-    @Transactional(isolation = Isolation.REPEATABLE_READ)
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public Response<User> addUser(User body, int forumID)  {
         Response<User> result = new Response<>();
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
@@ -140,19 +140,8 @@ public class UserDAO {
     public Response<List<User>> getUsers(int forumID, Integer limit, String since, Boolean desc) {
 
         List<Object> tempObj = new ArrayList<>();
-        //TODO forumid
-        //TODO newTable
         final StringBuilder postQuery = new StringBuilder(
                 "SELECT nickname, fullname, email, about FROM forum_users WHERE forumID = ? ");
-//                "SELECT * FROM users WHERE nickname = ANY " +
-//                        "( " +
-//                        "(SELECT DISTINCT author FROM post WHERE LOWER(forum) = LOWER(?)) " +
-//                        "UNION " +
-//                        "(SELECT DISTINCT author FROM thread WHERE LOWER(forum) = LOWER(?)) " +
-//                        ") ");
-//        tempObj.add(slug);
-//        tempObj.add(slug);
-
         tempObj.add(forumID);
         if (since != null) {
             if (desc != null && desc) {
@@ -179,7 +168,7 @@ public class UserDAO {
             return result;
         } catch (DataAccessException e) {
             result.setResponse(users, HttpStatus.NOT_FOUND);
-            System.out.println("qweasdZX");
+            //System.out.println("qweasdZX");
             return result;
         }
     }
@@ -215,14 +204,4 @@ public class UserDAO {
         }
     }
 
-//    private static final RowMapper<User> userMapper = (res, num) -> {
-//        String nickname = res.getString("nickname");
-//        String email = res.getString("email");
-//        String fullname = res.getString("fullname");
-//        String about = res.getString("about");
-//        if (res.wasNull()) {
-//            about = null;
-//        }
-//        return new User(fullname, nickname, email, about);
-//    };
 }

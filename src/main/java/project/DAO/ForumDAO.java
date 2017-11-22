@@ -21,12 +21,10 @@ public class ForumDAO {
 
     private final JdbcTemplate template;
     private final UserDAO userDAO;
-    private final ThreadDAO threadDAO;
 
-    public ForumDAO(JdbcTemplate template, UserDAO userDAO,ThreadDAO threadDAO) {
+    public ForumDAO(JdbcTemplate template, UserDAO userDAO) {
         this.template = template;
         this.userDAO = userDAO;
-        this.threadDAO = threadDAO;
     }
 
     public void clear() {
@@ -41,7 +39,7 @@ public class ForumDAO {
                 new Object[]{}, Integer.class);
     }
 
-    @Transactional(isolation = Isolation.REPEATABLE_READ)
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public Response<Forum> createForum(Forum body) {
         Response<Forum> result = new Response<>();
         Response<User> res = userDAO.getUserByNick(body.getUser());
@@ -90,16 +88,6 @@ public class ForumDAO {
             return result;
         }
     }
-
-
-//    private static RowMapper<Forum> forumMapper = (res, num) -> {
-//        String slug = res.getString("slug");
-//        String user = res.getString("user");
-//        String title = res.getString("title");
-//        int posts = res.getInt("posts");
-//        int threads = res.getInt("threads");
-//        return new Forum(slug, user, title, posts, threads);
-//    };
 
 }
 

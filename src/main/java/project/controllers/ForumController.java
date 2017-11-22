@@ -51,7 +51,6 @@ public class ForumController {
         Response<Forum> res1 = forumDAO.getForum(slug);
         if (res1.getStatus() == HttpStatus.NOT_FOUND) {
             ErrMsg msg = new ErrMsg();
-            msg.setMessage("ededed");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(msg);
         }
         body.setForumID(res1.getBody().getId());
@@ -64,18 +63,14 @@ public class ForumController {
         }
         body.setAuthor(res2.getBody().getNickname());
         body.setForum(res1.getBody().getSlug());
-        Response<Thread> res = threadDAO.createThread(body, res1.getBody().getThreads());
+        Response<Thread> res = threadDAO.createThread(body);
         if (res.getStatus() == HttpStatus.CONFLICT) {
             return ResponseEntity.status(res.getStatus()).body(threadDAO.getThread(body.getSlug()).getBody());
         }
         else if (res.getStatus() == HttpStatus.NOT_FOUND) {
-
             ErrMsg msg = new ErrMsg();
-            msg.setMessage("3");
-
             return ResponseEntity.status(res.getStatus()).body(msg);
         }
-        //return ResponseEntity.status(res.getStatus()).body(body);
         userDAO.addUser(res2.getBody(), res1.getBody().getId());
         return ResponseEntity.status(res.getStatus()).body(threadDAO.getThreadById(body.getId()).getBody());
 
@@ -119,14 +114,10 @@ public class ForumController {
         Response<Forum> exists = forumDAO.getForum(forum);
         if (exists.getStatus() == HttpStatus.NOT_FOUND) {
             ErrMsg msg = new ErrMsg();
-            System.out.println('1');
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(msg);
         }
         int fid = exists.getBody().getId();
-        Response<List<Thread>> res = threadDAO.getThreads(forum, fid, limit, since, desc);
-        //System.out.println("next");
-        //System.out.println(forumDAO.getForum(forum).getBody().getSlug());
-        //System.out.println(forumDAO.getForum(forum).getBody().getId());
+        Response<List<Thread>> res = threadDAO.getThreads(fid, limit, since, desc);
 
         if (res.getStatus() == HttpStatus.NOT_FOUND) {
             ErrMsg msg = new ErrMsg();

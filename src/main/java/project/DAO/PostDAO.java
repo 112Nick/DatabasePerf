@@ -30,13 +30,14 @@ public class PostDAO {
         this.template = template;
     }
 
-
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public Integer count() {
         return template.queryForObject(
                 "SELECT COUNT(*) FROM post;",
                 new Object[]{}, Integer.class);
     }
 
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public Response<Post> getPostById(int id) {
         Response<Post> result = new Response<>();
         try {
@@ -52,7 +53,7 @@ public class PostDAO {
         }
     }
 
-    @Transactional(isolation = Isolation.REPEATABLE_READ)
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public Response<Post> updatePost(Post body, int id) {
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
         try {
@@ -76,19 +77,4 @@ public class PostDAO {
             return res;
         }
     }
-
-//    private static final RowMapper<Post> postMapper = (res, num) -> {
-//        int id = res.getInt("id");
-//        int parent = res.getInt("parent");
-//        int thread = res.getInt("thread");
-//        boolean isEdited = res.getBoolean("isEdited");
-//        String forum = res.getString("forum");
-//        String author = res.getString("author");
-//        String message = res.getString("message");
-//        Timestamp created = res.getTimestamp("created");
-//        Array path = res.getArray("path");
-//
-//        return new Post(id, parent, thread, isEdited, author, message,forum, created, (Object[])path.getArray());
-//
-//    };
 }

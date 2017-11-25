@@ -44,19 +44,29 @@ public class Post {
         this.id = id;
         this.parent = parent;
         this.forum = forum;
-        if (created != null) {
-            this.created = DATE_FORMAT.format(new Date(created.getTime()));
-        } else {
-            this.created = DATE_FORMAT.format(new Date());
-        }
-
-
-//        if (created == null) {
-//            Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-//            this.created = timestamp.toInstant().toString();
+//        if (created != null) {
+//            this.created = DATE_FORMAT.format(new Date(created.getTime()));
 //        } else {
-//            this.created = created.toInstant().toString();
+//            this.created = DATE_FORMAT.format(new Date());
 //        }
+
+//        if (created != null) {
+//            //            this.created =Long.toString( created.toLocalDateTime().toEpochSecond(ZoneOffset.ofHours(3)));
+//
+//            this.created = created.toInstant().toString();
+////            System.out.println(created);
+////            System.out.println(this.created);
+//
+//        } else {
+//            this.created = DATE_FORMAT.format(new Date());
+//        }
+
+        if (created == null) {
+            Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+            this.created = timestamp.toInstant().toString();
+        } else {
+            this.created = created.toInstant().toString();
+        }
 
         this.message = message;
         this.isEdited = isEdited;

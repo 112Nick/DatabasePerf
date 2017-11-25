@@ -45,7 +45,8 @@ CREATE TABLE IF NOT EXISTS post (
   message TEXT,
   isedited BOOLEAN,
   forum TEXT,
-  created TIMESTAMP DEFAULT now(),
+  created TIMESTAMP WITH TIME ZONE ,
+
   thread INTEGER ,
   path INTEGER[]
 );
@@ -80,6 +81,9 @@ CREATE INDEX IF NOT EXISTS forum_slug_id ON forum(slug, id); --works, no perf+, 
 -- CREATE INDEX IF NOT EXISTS index_post_parent ON post (parent ASC);-- works
 -- CREATE INDEX IF NOT EXISTS index_post_path ON post (path ASC);-- works
 CREATE INDEX index_post_id_thread_parent ON post (id, thread, path);
+CREATE INDEX index_post_thread_parent,path_id ON post (thread, parent, path, id);
+CREATE INDEX index_post_thread_created_id ON post (thread, created, id);
+CREATE INDEX index_post_patent_thread_id ON post (parent, thread, id);
 -- -- CREATE INDEX IF NOT EXISTS index_post_parent_thread ON post (parent, thread);
 -- CREATE INDEX IF NOT EXISTS index_post_forum ON post (forum);-- works
 -- -- CREATE INDEX IF NOT EXISTS index_post_thread_id ON post (thread, id);
@@ -107,42 +111,7 @@ CREATE INDEX IF NOT EXISTS index_user_nickname_email ON users (nickname, email);
 CREATE INDEX IF NOT EXISTS index_user_nickname_id ON users (nickname, id);
 -- -- --
 
--- CREATE UNIQUE INDEX vote_user_thread
---   ON vote (userID, threadID);
---
---
---
---
--- CREATE INDEX thread_forum_created
---   ON thread (forumID, created); -----+++++
---
--- CREATE INDEX thread_slug
---   ON thread (slug); ---++++
---
---
--- CREATE INDEX users_on_forum_forumid_nick
---   ON forum_users (forumID, nickname); -----+++
---
---
---
---
--- --
--- -- CREATE INDEX post_threadid_iD_created
--- --   ON post (thread, id, created); --++++
---
--- CREATE INDEX post_parnt_threadid_path
---   ON post (parent, thread, path);--++++
---
--- CREATE INDEX post_tid_path
---   ON post (thread, path);--++++
---
---
--- CREATE INDEX forum_slug
---   ON forum (slug);-----+++++
---
--- CREATE INDEX users_nick
---   ON users (nickname); --++++++
---
+
 
 
 

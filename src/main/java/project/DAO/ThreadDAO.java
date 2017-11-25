@@ -52,7 +52,7 @@ public class ThreadDAO {
             return result;
         }
     }
-
+    //api/thread/649/posts?limit=16&since=248156&sort=flat
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public Response<List<Post>> getPosts(Thread thrd, Integer limit, Integer since, String sort, Boolean desc) {
         List<Object> tempObj = new ArrayList<>();

@@ -45,7 +45,8 @@ CREATE TABLE IF NOT EXISTS post (
   message TEXT,
   isedited BOOLEAN,
   forum TEXT,
-  created TIMESTAMP DEFAULT now(),
+  created TIMESTAMP WITH TIME ZONE ,
+
   thread INTEGER ,
   path INTEGER[]
 );

@@ -150,22 +150,6 @@ CREATE INDEX index2 ON post (thread, parent, path, id); -- +-
 CREATE INDEX index3 ON post (parent, thread, id); -- -+
 CREATE INDEX index4 ON post (forum, id);-- +
 
--- -- --All works
-CREATE INDEX IF NOT EXISTS index_vote_id ON vote (id);
-CREATE INDEX IF NOT EXISTS index_vote_id_nickname ON vote (id, nickname);
-CREATE INDEX IF NOT EXISTS index_vote_threadID_nickname ON vote (threadID, nickname);
--- -- --
--- --All works
-CREATE INDEX IF NOT EXISTS index_thread_slug ON thread (LOWER(slug));
-CREATE INDEX IF NOT EXISTS index_thread_forum ON thread (LOWER(forum));
-CREATE INDEX IF NOT EXISTS index_thread_forum ON thread (created);
-CREATE INDEX IF NOT EXISTS index_thread_forum_created ON thread (LOWER(forum), created);
--- --
--- --All works
-CREATE UNIQUE INDEX IF NOT EXISTS index_user_nickname ON users (LOWER(nickname));
-CREATE UNIQUE INDEX IF NOT EXISTS index_user_email ON users (LOWER(email));
-CREATE INDEX IF NOT EXISTS index_user_nickname_email ON users (nickname, email);
-CREATE INDEX IF NOT EXISTS index_user_nickname_id ON users (nickname, id);
 -- --
 
 

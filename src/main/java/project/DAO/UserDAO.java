@@ -180,11 +180,11 @@ public class UserDAO {
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
         try {template.update(con -> {
             PreparedStatement statement = con.prepareStatement(
-                    "update users set " +
+                    "UPDATE users SET " +
                             "fullname = COALESCE(?, fullname), " +
                             "about = COALESCE(?, about), " +
                             "email = COALESCE(?, email) " +
-                            "where LOWER(nickname) = LOWER(?)",
+                            "WHERE LOWER(nickname) = LOWER(?)",
                     PreparedStatement.RETURN_GENERATED_KEYS);
             statement.setString(1, body.getFullname());
             statement.setString(2, body.getAbout());

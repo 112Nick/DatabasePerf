@@ -86,7 +86,7 @@ public class UserDAO {
         Response<User> result = new Response<>();
         try {
             final User usr =  template.queryForObject(
-                    "SELECT * FROM users WHERE LOWER(nickname) = LOWER(?)",
+                    "SELECT * FROM users WHERE nickname = ?::CITEXT",
                     new Object[]{nickname},  Mappers.userMapper);
             result.setResponse(usr, HttpStatus.OK);
             return result;
@@ -126,7 +126,7 @@ public class UserDAO {
         Response<User> result = new Response<>();
         try {
             final User usr = template.queryForObject(
-                    "SELECT * FROM users WHERE LOWER(email) = LOWER(?)",
+                    "SELECT * FROM users WHERE email = ?::CITEXT",
                     new Object[]{email},  Mappers.userMapper);
             result.setResponse(usr, HttpStatus.OK);
             return result;
@@ -145,9 +145,9 @@ public class UserDAO {
         tempObj.add(forumID);
         if (since != null) {
             if (desc != null && desc) {
-                postQuery.append("AND LOWER(nickname) < LOWER(?) ");
+                postQuery.append("AND nickname < ?::CITEXT ");
             } else {
-                postQuery.append("AND LOWER(nickname) > LOWER(?) ");
+                postQuery.append("AND nickname > ?::CITEXT ");
             }
             tempObj.add(since);
         }
@@ -180,11 +180,11 @@ public class UserDAO {
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
         try {template.update(con -> {
             PreparedStatement statement = con.prepareStatement(
-                    "update users set " +
+                    "UPDATE users SET " +
                             "fullname = COALESCE(?, fullname), " +
                             "about = COALESCE(?, about), " +
                             "email = COALESCE(?, email) " +
-                            "where LOWER(nickname) = LOWER(?)",
+                            "WHERE LOWER(nickname) = LOWER(?)",
                     PreparedStatement.RETURN_GENERATED_KEYS);
             statement.setString(1, body.getFullname());
             statement.setString(2, body.getAbout());

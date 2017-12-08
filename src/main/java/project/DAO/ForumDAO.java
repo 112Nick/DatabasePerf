@@ -79,7 +79,7 @@ public class ForumDAO {
         Response<Forum> result = new Response<>();
         try {
             final Forum f= template.queryForObject(
-                    "SELECT * FROM forum WHERE LOWER(slug) = LOWER(?)",
+                    "SELECT * FROM forum WHERE slug = ?::CITEXT",
                     new Object[]{slug},  Mappers.forumMapper);
             result.setResponse(f, HttpStatus.OK);
             return result;

@@ -72,6 +72,11 @@ CREATE TABLE IF NOT EXISTS forum_users (
 );
 
 
+
+
+
+
+
 CREATE INDEX index1 ON post (thread,path,id); -- true
 CREATE INDEX index2 ON post (thread, parent, path, id); -- +-
 CREATE INDEX index3 ON post (parent, thread, id); -- -+
